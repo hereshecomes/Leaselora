@@ -1,0 +1,67 @@
+network_profiles:
+  weak_lte:
+    rate_mbps: 40
+    rtt_ms: 80
+    jitter_ms: 30
+    loss_percent: 1.0
+    loss_correlation: 25
+    reorder_percent: 0.1
+    duplicate_percent: 0.0
+    queue_limit_packets: 1000
+    online_prob: 0.90
+
+  mid_4g:
+    rate_mbps: 80
+    rtt_ms: 50
+    jitter_ms: 15
+    loss_percent: 0.5
+    loss_correlation: 15
+    reorder_percent: 0.05
+    duplicate_percent: 0.0
+    queue_limit_packets: 1000
+    online_prob: 0.95
+
+  wifi_bursty:
+    rate_mbps: 160
+    rtt_ms: 20
+    jitter_ms: 20
+    loss_percent: 0.2
+    loss_correlation: 40
+    reorder_percent: 0.2
+    duplicate_percent: 0.0
+    queue_limit_packets: 1000
+    online_prob: 0.98
+
+  strong_lan:
+    rate_mbps: 400
+    rtt_ms: 5
+    jitter_ms: 2
+    loss_percent: 0.0
+    loss_correlation: 0
+    reorder_percent: 0.0
+    duplicate_percent: 0.0
+    queue_limit_packets: 1000
+    online_prob: 1.0
+
+client_network_assignment:
+  default_policy: cycle
+  profiles: [weak_lte, mid_4g, wifi_bursty, strong_lan]
+
+network_predictor:
+  type: ewma
+  beta: 0.3
+  min_samples: 3
+  failure_penalty: 0.5
+  stale_after_rounds: 3
+  default_uplink_mbps: 80.0
+  default_rtt_ms: 50.0
+
+network_emulation:
+  enabled: true
+  mode: fixed
+  iface: eno1
+  use_sudo: true
+  upload_retry:
+    max_retries: 3
+    retry_backoff_sec: [1.0, 2.0, 4.0]
+    upload_timeout_sec: 60.0

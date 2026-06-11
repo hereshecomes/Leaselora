@@ -1,0 +1,97 @@
+experiment:
+  name: impl_sst2_leaselora
+  method: leaselora
+  seed: 42
+  num_rounds: 50
+  eval_every: 1
+  log_dir: logs/testbed/impl_sst2_leaselora
+  checkpoint_dir: checkpoints/testbed/impl_sst2_leaselora
+
+runtime:
+  backend: http
+  coordinator_host: 0.0.0.0
+  coordinator_port: 29580
+  round_timeout_sec: 300
+  discard_late_updates: true
+  real_network_transfer: true
+  serialize_updates: true
+  min_workers: 1
+  worker_wait_timeout_sec: 120
+
+model:
+  dataset: sst2
+  task_type: text_classification
+  backbone: distilbert-base-uncased
+  num_labels: 2
+  precision: bf16
+  lora:
+    rank: 8
+    alpha: 16
+    dropout: 0.05
+    target_modules: ["q_lin", "v_lin"]
+    bias: "none"
+
+fl:
+  num_clients: 20
+  clients_per_round: 5
+  participation_rate: 0.25
+  partition:
+    type: dirichlet
+    alpha: 0.5
+    seed: 42
+    dir: partitions/sst2_alpha0.5_clients20
+  local:
+    local_steps: 24
+    batch_size: 16
+    optimizer: adamw
+    lr: 3.0e-4
+    weight_decay: 0.01
+    max_grad_norm: 1.0
+    server_lr: 1.0
+
+scheduler:
+  lease_granularity: layer_bundle
+  bundle_size: 1
+  warmup_full_rounds: 5
+  base_deadline_sec: 22
+  deadline_factor: 1.2
+  simulated_step_time_sec: 0.5
+  enable_coverage_feedback: true
+  enable_service_feedback: true
+  enable_variance_feedback: true
+  enable_weak_client_reservation: true
+  weak_client_threshold: 0.5
+  shrink_policy: ["slices", "local_steps", "micro_batch"]
+
+resources:
+  profile: het_B
+  tiers:
+    - budget: 0.3
+      compute_slowdown: 3.5
+      uplink_mbps: 5
+      throughput: 150
+      memory_budget_gb: 12
+    - budget: 0.5
+      compute_slowdown: 2.0
+      uplink_mbps: 10
+      throughput: 300
+      memory_budget_gb: 16
+    - budget: 0.7
+      compute_slowdown: 1.4
+      uplink_mbps: 20
+      throughput: 450
+      memory_budget_gb: 20
+    - budget: 1.0
+      compute_slowdown: 1.0
+      uplink_mbps: 50
+      throughput: 500
+      memory_budget_gb: 24
+
+logging:
+  write_jsonl: true
+  write_csv_summary: true
+  log_client_updates: true
+  log_lease_details: true
+  log_payload_bytes: true
+  log_gpu_memory: true
+  log_network_time: true
